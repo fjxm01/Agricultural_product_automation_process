@@ -1,0 +1,67 @@
+{
+    "version": "2.0.0",
+    "runner": "terminal",
+    "type": "shell",
+    "echoCommand": true,
+    "presentation": {
+        "reveal": "always"
+    },
+    "tasks": [
+        //* Release build
+        {
+            "label": "Release build",
+            "command": "${workspaceFolder}/../cmake/bin/cmake.exe -DCMAKE_TOOLCHAIN_FILE=C:/Users/user/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build/release && ${workspaceFolder}/../cmake/bin/cmake.exe --build build/release --config Release",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            }
+        },
+        //* Release execute
+        {
+            "label": "Release Execute",
+            "command": "cmd",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "args": [
+                "/C",
+                "${fileDirname}\\build\\release\\Release\\${fileDirnameBasename}.exe"
+            ]
+        },
+        //* Debug build
+        {
+            "label": "Debug build",
+            "command": "cmake -DCMAKE_TOOLCHAIN_FILE=D:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build/debug && cmake --build build/debug",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            }
+        },
+        //* Debug execute
+        {
+            "label": "Debug Execute",
+            "command": "cmd",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "args": [
+                "/C",
+                "${fileDirname}\\build\\debug\\Debug\\${fileDirnameBasename}.exe"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

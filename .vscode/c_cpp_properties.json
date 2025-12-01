@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "windows-gcc-x64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/library/include",
+                "${workspaceFolder}/library/include/RB",
+                "${workspaceFolder}/library/include/server",
+                "C:/Users/user/vcpkg/installed/x64-windows/include",
+                "C:/Users/user/vcpkg/installed/x64-windows/include/vtk-9.3",
+                "C:/Users/user/vcpkg/installed/x64-windows/include/pcl/visualization",
+                "C:/Users/user/vcpkg/installed/x64-windows/include/opencv4",
+                "C:/Users/user/vcpkg/installed/x64-windows/include/curl"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22000.0",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "D:/mingw64/bin/gcc.exe"
+        }
+    ],
+    "version": 4
+}

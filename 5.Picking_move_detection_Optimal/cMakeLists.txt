@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.29)
+
+get_filename_component(ProjectId ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+string(REPLACE " " "_" ProjectId ${ProjectId})
+project(${ProjectId})
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(PCL REQUIRED)
+find_package(RealSense2 REQUIRED)
+find_package(OpenCV REQUIRED) 
+find_package(CURL REQUIRED)
+
+# 경로에 있는 모듈 경로 설정
+include_directories(
+    ${CMAKE_SOURCE_DIR}/../library/include
+    ${CMAKE_SOURCE_DIR}/../library/include/viz
+    ${CMAKE_SOURCE_DIR}/../library/include/math
+    ${CMAKE_SOURCE_DIR}/../library/include/RB
+    ${CMAKE_SOURCE_DIR}/../library/include/server
+)
+
+link_directories(${CMAKE_SOURCE_DIR}/../library/Lib)
+
+# 소스 파일 설정
+file(GLOB MAIN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+file(GLOB VIZ_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../library/src/viz/*.cpp)
+file(GLOB MATH_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../library/src/math/*.cpp)
+file(GLOB RB_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../library/src/RB/*.cpp)
+file(GLOB SERVER_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../library/src/server/*.cpp)
+# 모든 소스 파일 합치기
+list(GET SOURCES 0 MAIN_SOURCE)
+get_filename_component(EXE_NAME ${MAIN_SOURCE} NAME_WE)
+set(SOURCES ${MAIN_SOURCES} ${VIZ_SOURCES} ${MATH_SOURCES} ${RB_SOURCES} ${SERVER_SOURCES})
+# 실행 파일 생성
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# 라이브러리 링크
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    realsense2::realsense2
+    ${PCL_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${CURL_LIBRARIES}
+    rbpodo 
+    ws2_32
+)

@@ -1,0 +1,89 @@
+﻿#include "robotdatafetcher.h"
+#include <RB/rbpodo.hpp> // ResponseCollector 등을 위해 다시 포함
+
+RobotDataFetcher::RobotDataFetcher(QSharedPointer<CobotType> robotPtr, int intervalMs, QObject *parent)
+    : QObject(parent), robot(robotPtr), interval(intervalMs)
+{
+    // 타이머를 현재 객체(Fetcher)에 연결 (이 객체가 이동된 스레드에서 실행됨)
+    pollingTimer = new QTimer(this);
+    connect(pollingTimer, &QTimer::timeout, this, &RobotDataFetcher::doPolling);
+    
+    // Fecher 객체가 삭제될 때 finished 시그널을 발생시켜 스레드 종료를 알림
+    connect(this, &QObject::destroyed, this, [this](){ emit finished(); });
+}
+
+RobotDataFetcher::~RobotDataFetcher()
+{
+    // 타이머는 QObject::destroyed 시그널에 의해 자동으로 삭제됩니다.
+}
+
+void RobotDataFetcher::startPolling()
+{
+    if (robot.isNull()) {
+        emit pollingError("Robot pointer is null. Cannot start polling.");
+        emit finished();
+        return;
+    }
+    pollingTimer->start(interval);
+}
+
+void RobotDataFetcher::stopPolling()
+{
+    pollingTimer->stop();
+    // 객체가 스레드에서 완전히 안전하게 제거되도록 deleteLater를 호출합니다.
+    this->deleteLater(); 
+}
+
+void RobotDataFetcher::doPolling()
+{
+    if (robot.isNull()) {
+        emit pollingError("Robot disconnected during polling.");
+        stopPolling();
+        return;
+    }
+
+    try {
+        rb::podo::ResponseCollector rc;
+        
+        // --- 1. 관절 각도 요청 (Blocking 발생 가능) ---
+        JointAngleType currentJointAngles;
+        bool jointSuccess = true;
+        for (size_t i = 0; i < 6; ++i) {
+            double angle = 0.0;
+            if (!robot->get_system_variable(rc, JOINT_ANGLE_VARS[i], angle).is_success()) {
+                jointSuccess = false;
+                break;
+            }
+            currentJointAngles[i] = angle;
+        }
+        if (jointSuccess) {
+            emit jointAnglesUpdated(currentJointAngles); // 메인 스레드로 전송
+        } else {
+            // 경고는 너무 자주 발생하면 안되므로, 심각한 오류만 처리
+            // emit pollingError("Failed to fetch all joint angles.");
+        }
+        
+        // --- 2. TCP 자세 요청 (Blocking 발생 가능) ---
+        TCPPoseType currentTCPPose;
+        bool tcpSuccess = true;
+        for (size_t i = 0; i < 6; ++i) {
+            double value = 0.0;
+            if (!robot->get_system_variable(rc, TCP_POSE_VARS[i], value).is_success()) {
+                tcpSuccess = false;
+                break;
+            }
+            currentTCPPose[i] = value;
+        }
+        if (tcpSuccess) {
+            emit tcpPoseUpdated(currentTCPPose); // 메인 스레드로 전송
+        } else {
+            // emit pollingError("Failed to fetch all TCP pose variables.");
+        }
+        
+        rc.error().throw_if_not_empty();
+
+    } catch (const std::exception &e) {
+        emit pollingError(QString("Critical error during polling: %1").arg(e.what()));
+        stopPolling();
+    }
+}
